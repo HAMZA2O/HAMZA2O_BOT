@@ -1,6 +1,7 @@
 const { Telegraf } = require('telegraf');
 
-const GEMINI_API_KEY = 'AQ.Ab8RN6KshkEC2uhVlOMvxs0BK1R_gyrIZOnG5Gvghl3Xvty6UA'; 
+// توكن مايكروسوفت/جيت هب المباشر
+const GITHUB_TOKEN = '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'; 
 const TELEGRAM_TOKEN = '8371410810:AAFaaZ5HggAgJVC19qCZ5iLgP6wcr5jqb3s';
 
 const bot = new Telegraf(TELEGRAM_TOKEN);
@@ -15,25 +16,26 @@ bot.on('message', async (ctx) => {
     try {
         await ctx.sendChatAction('typing', extraOptions).catch(() => {});
 
-        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
+        // طلب الاستجابة من سيرفر مايكروسوفت (GitHub Models - GPT-4o Mini)
+        const response = await fetch('https://models.inference.ai.azure.com/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${GEMINI_API_KEY}`,
+                'Authorization': `Bearer ${GITHUB_TOKEN}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: text }] }]
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'user', content: text }]
             })
         });
 
         const data = await response.json();
 
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-            const replyText = data.candidates[0].content.parts[0].text;
-            await ctx.reply(replyText, extraOptions);
+        if (data.choices && data.choices[0]?.message?.content) {
+            await ctx.reply(data.choices[0].message.content, extraOptions);
         } else {
-            console.error('API Error Details:', JSON.stringify(data));
-            await ctx.reply(`⚠️ تعذر الرد:\n${data.error?.message || 'خطأ في التوثيق من سيرفر جوجل'}`, extraOptions);
+            console.error('API Error:', data);
+            await ctx.reply(`⚠️ تعذر الرد:\n${data.error?.message || 'خطأ غير معروف من سيرفر مايكروسوفت'}`, extraOptions);
         }
     } catch (error) {
         console.error('⚠️ Error:', error);
