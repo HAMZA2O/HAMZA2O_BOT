@@ -1,6 +1,6 @@
 const { Telegraf } = require('telegraf');
 
-const GEMINI_API_KEY = 'AQ.Ab8RN6LiQUznYhU1ah3SqllIItDKU1Wg202E9zM1LeGQF7y2uA'; 
+const OPENROUTER_API_KEY = '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'; 
 const TELEGRAM_TOKEN = '8371410810:AAFaaZ5HggAgJVC19qCZ5iLgP6wcr5jqb3s';
 
 const bot = new Telegraf(TELEGRAM_TOKEN);
@@ -15,24 +15,22 @@ bot.on('message', async (ctx) => {
     try {
         await ctx.sendChatAction('typing', extraOptions).catch(() => {});
 
-        // تمرير المفتاح كـ URL Query Parameter لتفادي مشكلة الـ OAuth
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-        const response = await fetch(url, {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
+                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: text }] }]
+                model: 'google/gemini-flash-1.5',
+                messages: [{ role: 'user', content: text }]
             })
         });
 
         const data = await response.json();
 
-        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-            const replyText = data.candidates[0].content.parts[0].text;
-            await ctx.reply(replyText, extraOptions);
+        if (data.choices && data.choices[0]?.message?.content) {
+            await ctx.reply(data.choices[0].message.content, extraOptions);
         } else {
             console.error('API Error:', data);
             await ctx.reply(`⚠️ تعذر الرد:\n${data.error?.message || 'خطأ غير معروف'}`, extraOptions);
