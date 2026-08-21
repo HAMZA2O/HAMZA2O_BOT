@@ -6,7 +6,7 @@
     "start": "node bot.js"
   },
   "dependencies": {
-    "@google/genai": "latest",
+    "@google/generative-ai": "^0.21.0",
     "telegraf": "^4.16.3"
   }
 }
