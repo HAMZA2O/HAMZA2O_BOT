@@ -17,7 +17,8 @@ bot.on('message', async (ctx) => {
     try {
         await ctx.sendChatAction('typing', extraOptions).catch(() => {});
 
-        const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash-lite" });
+        // تجربة النموذج الرسمي السريع
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(text);
         const responseText = result.response.text();
 
@@ -25,8 +26,9 @@ bot.on('message', async (ctx) => {
             await ctx.reply(responseText, extraOptions);
         }
     } catch (error) {
-        console.error('⚠️ خطأ في الاستجابة:', error.message);
-        await ctx.reply('⚠️ تعذر الرد حالياً، يرجى المحاولة لاحقاً.', extraOptions).catch(() => {});
+        console.error('⚠️ Error:', error);
+        // إرسال تفاصيل الخطأ مباشرة إلى الشات لمعرفة السبب الحقيقي
+        await ctx.reply(`⚠️ حدث خطأ:\n${error.message}`, extraOptions).catch(() => {});
     }
 });
 
