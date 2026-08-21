@@ -22,7 +22,8 @@ bot.on('message', async (ctx) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'google/gemini-2.0-flash-001',
+                // مسار موديل جمناي المجاني والمستقر المعتمد في OpenRouter
+                model: 'google/gemini-2.0-flash-exp:free',
                 messages: [{ role: 'user', content: text }]
             })
         });
