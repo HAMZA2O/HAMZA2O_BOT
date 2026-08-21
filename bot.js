@@ -1,5 +1,4 @@
 const { Telegraf } = require('telegraf');
-const { Telegraf } = require('telegraf');
 
 const GEMINI_API_KEY = 'AQ.Ab8RN6LiQUznYhU1ah3SqllIItDKU1Wg202E9zM1LeGQF7y2uA'; 
 const TELEGRAM_TOKEN = '8371410810:AAFaaZ5HggAgJVC19qCZ5iLgP6wcr5jqb3s';
