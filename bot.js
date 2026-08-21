@@ -1,6 +1,7 @@
 const { Telegraf } = require('telegraf');
+const { Telegraf } = require('telegraf');
 
-const ACCESS_TOKEN = 'AQ.Ab8RN6LiQUznYhU1ah3SqllIItDKU1Wg202E9zM1LeGQF7y2uA'; 
+const GEMINI_API_KEY = 'AQ.Ab8RN6LiQUznYhU1ah3SqllIItDKU1Wg202E9zM1LeGQF7y2uA'; 
 const TELEGRAM_TOKEN = '8371410810:AAFaaZ5HggAgJVC19qCZ5iLgP6wcr5jqb3s';
 
 const bot = new Telegraf(TELEGRAM_TOKEN);
@@ -15,11 +16,12 @@ bot.on('message', async (ctx) => {
     try {
         await ctx.sendChatAction('typing', extraOptions).catch(() => {});
 
-        // إرسال الطلب المباشر باستخدام Bearer Token الخاص بك
-        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
+        // تمرير المفتاح كـ URL Query Parameter لتفادي مشكلة الـ OAuth
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${ACCESS_TOKEN}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -33,8 +35,8 @@ bot.on('message', async (ctx) => {
             const replyText = data.candidates[0].content.parts[0].text;
             await ctx.reply(replyText, extraOptions);
         } else {
-            console.error('API Response Error:', data);
-            await ctx.reply(`⚠️ تعذر الرد:\n${data.error?.message || 'خطأ في معالجة النص'}`, extraOptions);
+            console.error('API Error:', data);
+            await ctx.reply(`⚠️ تعذر الرد:\n${data.error?.message || 'خطأ غير معروف'}`, extraOptions);
         }
     } catch (error) {
         console.error('⚠️ Error:', error);
