@@ -1,11 +1,9 @@
 const { Telegraf } = require('telegraf');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const GEMINI_API_KEY = 'AQ.Ab8RN6ItCiGOHkP1tHqADRNZKXMtIyJXuIpGasbiSrwKc2GG9w'; 
+const ACCESS_TOKEN = 'AQ.Ab8RN6LiQUznYhU1ah3SqllIItDKU1Wg202E9zM1LeGQF7y2uA'; 
 const TELEGRAM_TOKEN = '8371410810:AAFaaZ5HggAgJVC19qCZ5iLgP6wcr5jqb3s';
 
 const bot = new Telegraf(TELEGRAM_TOKEN);
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 bot.on('message', async (ctx) => {
     const text = ctx.message?.text;
@@ -17,17 +15,29 @@ bot.on('message', async (ctx) => {
     try {
         await ctx.sendChatAction('typing', extraOptions).catch(() => {});
 
-        // تجربة النموذج الرسمي السريع
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(text);
-        const responseText = result.response.text();
+        // إرسال الطلب المباشر باستخدام Bearer Token الخاص بك
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${ACCESS_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: text }] }]
+            })
+        });
 
-        if (responseText) {
-            await ctx.reply(responseText, extraOptions);
+        const data = await response.json();
+
+        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+            const replyText = data.candidates[0].content.parts[0].text;
+            await ctx.reply(replyText, extraOptions);
+        } else {
+            console.error('API Response Error:', data);
+            await ctx.reply(`⚠️ تعذر الرد:\n${data.error?.message || 'خطأ في معالجة النص'}`, extraOptions);
         }
     } catch (error) {
         console.error('⚠️ Error:', error);
-        // إرسال تفاصيل الخطأ مباشرة إلى الشات لمعرفة السبب الحقيقي
         await ctx.reply(`⚠️ حدث خطأ:\n${error.message}`, extraOptions).catch(() => {});
     }
 });
