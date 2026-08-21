@@ -1,43 +1,42 @@
 const { Telegraf } = require('telegraf');
 
-const OPENROUTER_API_KEY = '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'; 
+// المفتاح الخاص بك
+const GEMINI_API_KEY = 'AQ.Ab8RN6Jg4uYpjIDBB8M3vl5en1EaN-Qs1nzuSnEf0VKZEwjYiA'; 
 const TELEGRAM_TOKEN = '8371410810:AAFaaZ5HggAgJVC19qCZ5iLgP6wcr5jqb3s';
 
 const bot = new Telegraf(TELEGRAM_TOKEN);
 
-// قائمة النماذج التبادلية (إذا فشل نموذج ينتقل تلقائياً للذي يليه)
+// قائمة النماذج المتاحة على نفس المفتاح للتنقل بينها في حال الوصول للحد الأقصى
 const MODELS = [
-    'google/gemini-2.0-flash-lite-preview-02-05:free',
-    'google/gemini-2.0-pro-exp-02-05:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'deepseek/deepseek-r1:free'
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-8b',
+    'gemini-1.5-pro'
 ];
 
-async function askOpenRouter(text) {
+async function generateGeminiContent(text) {
     for (const model of MODELS) {
         try {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                    'Authorization': `Bearer ${GEMINI_API_KEY}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: text }]
+                    contents: [{ parts: [{ text: text }] }]
                 })
             });
 
             const data = await response.json();
 
-            if (data.choices && data.choices[0]?.message?.content) {
-                return data.choices[0].message.content;
+            if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                return data.candidates[0].content.parts[0].text;
             }
         } catch (e) {
-            console.log(`فشل النموذج ${model}، جاري التجربة على النموذج التالي...`);
+            console.log(`فشل النموذج ${model}، جاري المحاولة مع النموذج التالي...`);
         }
     }
-    throw new Error('جميع النماذج المجانية المتاحة غير متوفرة حالياً، حاول لاحقاً.');
+    throw new Error('تم استهلاك الحدود المجانية لجميع النماذج المتاحة حالياً.');
 }
 
 bot.on('message', async (ctx) => {
@@ -50,7 +49,7 @@ bot.on('message', async (ctx) => {
     try {
         await ctx.sendChatAction('typing', extraOptions).catch(() => {});
 
-        const replyText = await askOpenRouter(text);
+        const replyText = await generateGeminiContent(text);
         await ctx.reply(replyText, extraOptions);
 
     } catch (error) {
